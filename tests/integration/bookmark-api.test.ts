@@ -2,11 +2,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { PrismaClient } from '@prisma/client'
 import { createBookmark } from '../factories/bookmark-factory'
 
-// Test database setup
+// Test database setup - use existing dev.db for testing
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: 'file:./test.db',
+      url: 'file:/Users/nikita/projects/markfy/prisma/dev.db',
     },
   },
 })
@@ -95,7 +95,6 @@ describe('Bookmark API Integration Tests', () => {
         where: {
           title: {
             contains: 'Bookmark',
-            mode: 'insensitive',
           },
         },
       })

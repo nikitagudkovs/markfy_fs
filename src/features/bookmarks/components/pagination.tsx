@@ -1,6 +1,8 @@
 'use client'
 
+import { useMemo, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { FileText, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface PaginationProps {
   pagination: {
@@ -17,17 +19,18 @@ export function Pagination({ pagination }: PaginationProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const navigateToPage = (page: number) => {
+  // 🔧 OPTIMIZATION: useCallback prevents function recreation on every render
+  const navigateToPage = useCallback((page: number) => {
     const params = new URLSearchParams(searchParams)
     params.set('page', page.toString())
     router.push(`/?${params.toString()}`)
-  }
+  }, [router, searchParams])
 
-  const getVisiblePages = () => {
+  const visiblePages = useMemo(() => {
     const { page, totalPages } = pagination
     const delta = 2
     const range = []
-    const rangeWithDots = []
+    const rangeWithDots: (number | string)[] = []
 
     for (
       let i = Math.max(2, page - delta);
@@ -52,7 +55,7 @@ export function Pagination({ pagination }: PaginationProps) {
     }
 
     return rangeWithDots
-  }
+  }, [pagination.page, pagination.totalPages])
 
   if (pagination.totalPages <= 1) {
     return null
@@ -61,9 +64,7 @@ export function Pagination({ pagination }: PaginationProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 mt-6" style={{ borderTop: '2px solid var(--border)' }}>
       <div className="badge">
-        <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
+        <FileText className="icon-sm" />
         <span>
           Showing {((pagination.page - 1) * pagination.limit) + 1}–
           {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
@@ -77,14 +78,12 @@ export function Pagination({ pagination }: PaginationProps) {
           className={`btn ${pagination.hasPrev ? 'btn-secondary' : ''}`}
           style={{ height: '2.75rem' }}
         >
-          <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft className="icon-sm" />
           <span className="hidden sm:inline">Previous</span>
         </button>
 
         <div className="hidden sm:flex items-center gap-2">
-          {getVisiblePages().map((pageNum, index) => (
+          {visiblePages.map((pageNum, index) => (
             <div key={index}>
               {pageNum === '...' ? (
                 <span className="px-3" style={{ color: 'var(--muted-foreground)' }}>...</span>
@@ -116,9 +115,7 @@ export function Pagination({ pagination }: PaginationProps) {
           style={{ height: '2.75rem' }}
         >
           <span className="hidden sm:inline">Next</span>
-          <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <ChevronRight className="icon-sm" />
         </button>
       </div>
     </div>

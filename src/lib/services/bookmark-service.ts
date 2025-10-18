@@ -22,7 +22,6 @@ export class BookmarkService {
   }
 
   async createLink(data: CreateLink): Promise<LinkResponse> {
-    // Check for duplicate URL
     const existingLink = await this.repository.findByUrl(data.url)
     if (existingLink) {
       throw new Error('A bookmark with this URL already exists')
@@ -33,13 +32,11 @@ export class BookmarkService {
   }
 
   async updateLink(id: string, data: Partial<UpdateLink>): Promise<LinkResponse> {
-    // Check if link exists
     const existingLink = await this.repository.findUnique({ where: { id } })
     if (!existingLink) {
       throw new Error('Link not found')
     }
 
-    // If updating URL, check for duplicates
     if (data.url && data.url !== existingLink.url) {
       const duplicateLink = await this.repository.findByUrl(data.url)
       if (duplicateLink) {
@@ -73,7 +70,6 @@ export class BookmarkService {
     const favoriteQuery = { ...query, sort: 'newest' as const }
     const { links, total } = await this.repository.findByQuery(favoriteQuery)
     
-    // Filter only favorites
     const favoriteLinks = links.filter(link => link.isFavorite)
     
     const pagination = {

@@ -28,7 +28,7 @@ export async function BookmarkList({ page, limit, search, sort }: BookmarkListPr
 
     if (result.data.length === 0) {
       return (
-        <div className="card text-center py-16 mt-6" style={{ padding: '4rem 2rem' }}>
+        <div className="card text-center py-16 mt-8" style={{ padding: '4rem 2rem' }}>
           <div className="text-6xl mb-4">🔖</div>
           <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
             No bookmarks found
@@ -44,7 +44,7 @@ export async function BookmarkList({ page, limit, search, sort }: BookmarkListPr
     }
 
     return (
-      <div className="space-y-8 mt-6">
+      <div className="space-y-8 mt-8">
         <div className="space-y-6">
           {result.data.map((bookmark) => (
             <BookmarkItem key={bookmark.id} bookmark={bookmark} />
@@ -57,7 +57,7 @@ export async function BookmarkList({ page, limit, search, sort }: BookmarkListPr
   } catch (error) {
     console.error('Error fetching bookmarks:', error)
     return (
-      <div className="card text-center py-16 mt-6" style={{ padding: '4rem 2rem' }}>
+      <div className="card text-center py-16 mt-8" style={{ padding: '4rem 2rem' }}>
         <div className="text-6xl mb-4">⚠️</div>
         <h3 className="text-xl font-semibold mb-3" style={{ color: 'var(--destructive)' }}>
           Error loading bookmarks

@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
+import React from 'react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { AddBookmarkForm } from '@/features/bookmarks/components/add-bookmark-form'
 
@@ -16,7 +17,7 @@ describe('AddBookmarkForm', () => {
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/url/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/add to favorites/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/mark as favorite/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /add bookmark/i })).toBeInTheDocument()
   })
 
@@ -27,7 +28,7 @@ describe('AddBookmarkForm', () => {
     fireEvent.click(submitButton)
     
     await waitFor(() => {
-      expect(screen.getByDisplayValue('')).toBeInvalid()
+      expect(screen.getByRole('textbox', { name: /title/i })).toBeInvalid()
     })
   })
 
@@ -96,7 +97,7 @@ describe('AddBookmarkForm', () => {
   it('should toggle favorite checkbox', () => {
     render(<AddBookmarkForm />)
     
-    const favoriteCheckbox = screen.getByLabelText(/add to favorites/i)
+    const favoriteCheckbox = screen.getByLabelText(/mark as favorite/i)
     expect(favoriteCheckbox).not.toBeChecked()
     
     fireEvent.click(favoriteCheckbox)

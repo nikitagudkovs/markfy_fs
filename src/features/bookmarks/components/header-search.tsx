@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Search, X, Plus, ChevronDown } from 'lucide-react'
 import { BookmarkModal } from './bookmark-modal'
 
 
@@ -17,11 +18,25 @@ export function HeaderSearch({ search: initialSearch, sort: initialSort }: Heade
   const [sort, setSort] = useState(initialSort)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const isUpdatingUrl = useRef(false)
+  const hasInitialized = useRef(false)
 
-  // Debounced search effect
+  // 🔧 OPTIMIZATION: Only sync with URL params on initial mount
+  // This prevents the sync from interfering with user input
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      const urlSearch = searchParams.get('search') || ''
+      const urlSort = searchParams.get('sort') || 'newest'
+      
+      setSearch(urlSearch)
+      setSort(urlSort)
+      hasInitialized.current = true
+    }
+  }, [searchParams])
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams)
+      const params = new URLSearchParams(searchParams.toString())
       
       if (search) {
         params.set('search', search)
@@ -35,14 +50,18 @@ export function HeaderSearch({ search: initialSearch, sort: initialSort }: Heade
         params.delete('sort')
       }
       
-      params.delete('page')
+      if (search !== (searchParams.get('search') || '')) {
+        params.delete('page')
+      }
       
+      isUpdatingUrl.current = true
       router.push(`/?${params.toString()}`)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [search, sort, router, searchParams])
+  }, [search, sort, searchParams, router])
 
+  // 🔧 OPTIMIZATION: useCallback prevents function recreation
   const handleSortChange = useCallback((newSort: string) => {
     setSort(newSort)
   }, [])
@@ -51,7 +70,7 @@ export function HeaderSearch({ search: initialSearch, sort: initialSort }: Heade
     <>
       <header className="header">
         <div className="container">
-          <div className="flex items-center justify-between gap-4 py-4">
+          <div className="flex items-center justify-between gap-4 py-6">
             {/* Logo */}
             <div className={`flex-shrink-0 transition-all ${isSearchFocused ? 'hidden md:block' : 'block'}`}>
               <h1 className="logo">Markfy</h1>
@@ -59,16 +78,7 @@ export function HeaderSearch({ search: initialSearch, sort: initialSort }: Heade
 
             {/* Search Bar */}
             <div className="flex-1 max-w-xl">
-              <div className="relative">
-                <svg 
-                  className="icon-sm absolute left-3 top-1/2 -translate-y-1/2" 
-                  style={{ color: 'var(--muted-foreground)' }}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+              <div className="relative flex items-center">
                 <input
                   type="text"
                   value={search}
@@ -82,48 +92,38 @@ export function HeaderSearch({ search: initialSearch, sort: initialSort }: Heade
                     border: '1px solid var(--border)'
                   }}
                 />
-                {search && (
-                  <button
-                    onClick={() => setSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <select
-                value={sort}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className={`input transition-all ${isSearchFocused ? 'hidden md:block' : 'hidden sm:block'}`}
-                style={{ 
-                  minWidth: '140px',
-                  paddingRight: '2rem',
-                  appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.5rem center',
-                  backgroundSize: '1.25rem'
-                }}
-              >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="title">A-Z</option>
-                <option value="favorites">Favorites</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={sort}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className={`input transition-all ${isSearchFocused ? 'hidden md:block' : 'hidden sm:block'}`}
+                  style={{ 
+                    minWidth: '140px',
+                    paddingRight: '2rem',
+                    appearance: 'none'
+                  }}
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="title">A-Z</option>
+                  <option value="favorites">Favorites</option>
+                </select>
+                <ChevronDown 
+                  className="icon-sm absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: 'var(--muted-foreground)' }}
+                />
+              </div>
 
               <button
                 onClick={() => setIsAddModalOpen(true)}
                 className="btn btn-primary"
               >
-                <svg className="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus className="icon-sm" />
                 <span className="hidden sm:inline">Add</span>
               </button>
             </div>

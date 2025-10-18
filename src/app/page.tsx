@@ -21,12 +21,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f5f3ed' }}>
-      {/* Header */}
       <HeaderSearch search={search} sort={sort} />
 
-      {/* Main Content */}
       <main className="container py-8">
-        {/* Bookmarks List */}
         <Suspense fallback={<BookmarkListSkeleton />}>
           <BookmarkList 
             page={page}
