@@ -1,5 +1,5 @@
 import { BookmarkRepository } from '@/lib/repositories/bookmark-repository'
-import { LinkResponseDto } from '@/features/bookmarks/dtos/bookmark-dto'
+import { mapLink, mapLinkList } from '@/features/bookmarks/mappers/link-mapper'
 import { CreateLink, UpdateLink, LinkQuery, LinkResponse, PaginatedLinksResponse } from '@/features/bookmarks/schemas/bookmark-schemas'
 
 export class BookmarkService {
@@ -13,12 +13,12 @@ export class BookmarkService {
       total,
     }
 
-    return LinkResponseDto.toList(links, pagination)
+    return mapLinkList(links, pagination)
   }
 
   async getLinkById(id: string): Promise<LinkResponse | null> {
     const link = await this.repository.findUnique({ where: { id } })
-    return link ? LinkResponseDto.fromPrisma(link) : null
+    return link ? mapLink(link) : null
   }
 
   async createLink(data: CreateLink): Promise<LinkResponse> {
@@ -28,7 +28,7 @@ export class BookmarkService {
     }
 
     const link = await this.repository.create({ data })
-    return LinkResponseDto.fromPrisma(link)
+    return mapLink(link)
   }
 
   async updateLink(id: string, data: Partial<UpdateLink>): Promise<LinkResponse> {
@@ -49,7 +49,7 @@ export class BookmarkService {
       data,
     })
 
-    return LinkResponseDto.fromPrisma(link)
+    return mapLink(link)
   }
 
   async deleteLink(id: string): Promise<void> {
@@ -63,7 +63,7 @@ export class BookmarkService {
 
   async toggleFavorite(id: string): Promise<LinkResponse> {
     const link = await this.repository.toggleFavorite(id)
-    return LinkResponseDto.fromPrisma(link)
+    return mapLink(link)
   }
 
   async getFavoriteLinks(query: Omit<LinkQuery, 'sort'>): Promise<PaginatedLinksResponse> {
@@ -78,6 +78,6 @@ export class BookmarkService {
       total: favoriteLinks.length,
     }
 
-    return LinkResponseDto.toList(favoriteLinks, pagination)
+    return mapLinkList(favoriteLinks, pagination)
   }
 }

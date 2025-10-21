@@ -2,9 +2,14 @@ import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { AddBookmarkForm } from '@/features/bookmarks/components/add-bookmark-form'
+import { createBookmark } from '@/features/bookmarks/actions/bookmark-actions'
 
-// Mock fetch
-global.fetch = vi.fn()
+// Mock server actions
+vi.mock('@/features/bookmarks/actions/bookmark-actions', () => ({
+  createBookmark: vi.fn(),
+}))
+
+const mockCreateBookmark = vi.mocked(createBookmark)
 
 describe('AddBookmarkForm', () => {
   beforeEach(() => {
@@ -33,11 +38,10 @@ describe('AddBookmarkForm', () => {
   })
 
   it('should submit form with valid data', async () => {
-    const mockFetch = vi.mocked(fetch)
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ id: '1', title: 'Test' }),
-    } as Response)
+    mockCreateBookmark.mockResolvedValueOnce({
+      success: true,
+      data: { id: '1', title: 'Test Bookmark' },
+    })
 
     render(<AddBookmarkForm />)
     
@@ -55,27 +59,19 @@ describe('AddBookmarkForm', () => {
     fireEvent.click(submitButton)
     
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('/api/links', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: 'Test Bookmark',
-          url: 'https://test.com',
-          description: 'Test description',
-          isFavorite: false,
-        }),
-      })
+      expect(mockCreateBookmark).toHaveBeenCalledWith(
+        expect.objectContaining({
+          get: expect.any(Function),
+        })
+      )
     })
   })
 
-  it('should show error message on API failure', async () => {
-    const mockFetch = vi.mocked(fetch)
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ error: 'API Error' }),
-    } as Response)
+  it('should show error message on server action failure', async () => {
+    mockCreateBookmark.mockResolvedValueOnce({
+      success: false,
+      error: 'A bookmark with this URL already exists',
+    })
 
     render(<AddBookmarkForm />)
     
@@ -90,7 +86,7 @@ describe('AddBookmarkForm', () => {
     fireEvent.click(submitButton)
     
     await waitFor(() => {
-      expect(screen.getByText(/API Error/i)).toBeInTheDocument()
+      expect(screen.getByText(/A bookmark with this URL already exists/i)).toBeInTheDocument()
     })
   })
 

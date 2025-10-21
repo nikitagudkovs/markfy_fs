@@ -1,14 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/db'
-import { BookmarkRepository } from '@/lib/repositories/bookmark-repository'
-import { BookmarkService } from '@/lib/services/bookmark-service'
+import { getBookmarkService } from '@/lib/services/service-container'
 import { CreateLinkSchema, UpdateLinkSchema } from '@/features/bookmarks/schemas/bookmark-schemas'
 
-const repository = new BookmarkRepository(prisma)
-const service = new BookmarkService(repository)
+const service = getBookmarkService()
 
 export async function createBookmark(formData: FormData) {
   try {
@@ -22,7 +18,11 @@ export async function createBookmark(formData: FormData) {
     const validatedData = CreateLinkSchema.parse(rawData)
     const result = await service.createLink(validatedData)
     
-    revalidatePath('/')
+    // Only revalidate in production/development, not in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      revalidatePath('/')
+    }
+    
     return { success: true, data: result }
   } catch (error) {
     console.error('Error creating bookmark:', error)
@@ -33,8 +33,13 @@ export async function createBookmark(formData: FormData) {
   }
 }
 
-export async function updateBookmark(id: string, formData: FormData) {
+export async function updateBookmark(formData: FormData) {
   try {
+    const id = formData.get('id') as string
+    if (!id) {
+      throw new Error('Bookmark ID is required')
+    }
+
     const rawData = {
       title: formData.get('title'),
       url: formData.get('url'),
@@ -45,7 +50,11 @@ export async function updateBookmark(id: string, formData: FormData) {
     const validatedData = UpdateLinkSchema.parse({ ...rawData, id })
     const result = await service.updateLink(id, validatedData)
     
-    revalidatePath('/')
+    // Only revalidate in production/development, not in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      revalidatePath('/')
+    }
+    
     return { success: true, data: result }
   } catch (error) {
     console.error('Error updating bookmark:', error)
@@ -56,10 +65,20 @@ export async function updateBookmark(id: string, formData: FormData) {
   }
 }
 
-export async function deleteBookmark(id: string) {
+export async function deleteBookmark(formData: FormData) {
   try {
+    const id = formData.get('id') as string
+    if (!id) {
+      throw new Error('Bookmark ID is required')
+    }
+
     await service.deleteLink(id)
-    revalidatePath('/')
+    
+    // Only revalidate in production/development, not in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      revalidatePath('/')
+    }
+    
     return { success: true }
   } catch (error) {
     console.error('Error deleting bookmark:', error)
@@ -70,10 +89,20 @@ export async function deleteBookmark(id: string) {
   }
 }
 
-export async function toggleFavorite(id: string) {
+export async function toggleFavorite(formData: FormData) {
   try {
+    const id = formData.get('id') as string
+    if (!id) {
+      throw new Error('Bookmark ID is required')
+    }
+
     const result = await service.toggleFavorite(id)
-    revalidatePath('/')
+    
+    // Only revalidate in production/development, not in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      revalidatePath('/')
+    }
+    
     return { success: true, data: result }
   } catch (error) {
     console.error('Error toggling favorite:', error)

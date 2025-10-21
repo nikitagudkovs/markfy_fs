@@ -1,6 +1,6 @@
 import { useOptimistic, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { LinkResponse } from '../schemas/bookmark-schemas'
+import { toggleFavorite, deleteBookmark, updateBookmark as updateBookmarkAction } from '../actions/bookmark-actions'
 
 type OptimisticAction = 
   | { type: 'toggle_favorite'; id: string }
@@ -8,12 +8,12 @@ type OptimisticAction =
   | { type: 'update'; id: string; data: Partial<LinkResponse> }
 
 /**
- * Custom hook for optimistic bookmark updates
+ * Custom hook for optimistic bookmark updates using Server Actions
  * 
  * HOW IT WORKS:
  * 1. User performs action (e.g., clicks favorite)
  * 2. UI updates IMMEDIATELY using optimistic state
- * 3. Server request happens in background
+ * 3. Server Action happens in background
  * 4. If successful: optimistic state becomes real state
  * 5. If failed: state reverts + shows error
  * 
@@ -21,9 +21,9 @@ type OptimisticAction =
  * - Instant UI feedback (no loading spinners needed)
  * - Better UX than window.location.reload()
  * - Handles errors gracefully
+ * - Uses modern Server Actions instead of API routes
  */
 export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
-  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
   // useOptimistic manages the "optimistic" state
@@ -48,31 +48,29 @@ export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
   )
 
   /**
-   * Toggle favorite with optimistic update
+   * Toggle favorite with optimistic update using Server Action
    */
-  const toggleFavorite = async () => {
+  const handleToggleFavorite = async () => {
     // Step 1: Update UI immediately (optimistic)
     setOptimisticBookmark({ type: 'toggle_favorite', id: initialBookmark.id })
     
-    // Step 2: Make server request in background
+    // Step 2: Make server request in background using Server Action
     startTransition(async () => {
       try {
-        const response = await fetch(`/api/links/${initialBookmark.id}/favorite`, {
-          method: 'PATCH',
-        })
+        const formData = new FormData()
+        formData.append('id', initialBookmark.id)
+        
+        const result = await toggleFavorite(formData)
 
-        if (!response.ok) {
-          throw new Error('Failed to toggle favorite')
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to toggle favorite')
         }
 
-        // Step 3: Revalidate to sync with server (Next.js 15 feature)
-        router.refresh()
+        // Server Action automatically handles revalidation
       } catch (error) {
         console.error('Error toggling favorite:', error)
         // On error, React automatically reverts the optimistic update
         alert('Failed to toggle favorite. Please try again.')
-        // Force revalidation to get correct state
-        router.refresh()
       }
     })
   }
@@ -87,58 +85,59 @@ export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
     // Step 2: Make server request
     startTransition(async () => {
       try {
-        const response = await fetch(`/api/links/${initialBookmark.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        })
+        const formData = new FormData()
+        formData.append('id', initialBookmark.id)
+        if (data.title) formData.append('title', data.title)
+        if (data.url) formData.append('url', data.url)
+        if (data.description !== undefined) formData.append('description', data.description)
+        if (data.isFavorite !== undefined) formData.append('isFavorite', data.isFavorite ? 'on' : 'off')
+        
+        const result = await updateBookmarkAction(formData)
 
-        if (!response.ok) {
-          throw new Error('Failed to update bookmark')
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to update bookmark')
         }
 
-        router.refresh()
+        // Server Action automatically handles revalidation
       } catch (error) {
         console.error('Error updating bookmark:', error)
         alert('Failed to update bookmark. Please try again.')
-        router.refresh()
       }
     })
   }
 
   /**
-   * Delete bookmark (optimistic removal happens in parent component)
+   * Delete bookmark using Server Action
    */
-  const deleteBookmark = () => {
+  const handleDeleteBookmark = () => {
     if (!confirm('Delete this bookmark?')) {
       return
     }
 
-    startTransition(() => {
-      // Perform async operation
-      fetch(`/api/links/${initialBookmark.id}`, {
-        method: 'DELETE',
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Failed to delete bookmark')
-          }
-          // Refresh to remove from list
-          router.refresh()
-        })
-        .catch((error) => {
-          console.error('Error deleting bookmark:', error)
-          alert('Failed to delete bookmark. Please try again.')
-          router.refresh()
-        })
+    startTransition(async () => {
+      try {
+        const formData = new FormData()
+        formData.append('id', initialBookmark.id)
+        
+        const result = await deleteBookmark(formData)
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to delete bookmark')
+        }
+
+        // Server Action automatically handles revalidation
+      } catch (error) {
+        console.error('Error deleting bookmark:', error)
+        alert('Failed to delete bookmark. Please try again.')
+      }
     })
   }
 
   return {
     bookmark: optimisticBookmark,
     isPending,
-    toggleFavorite,
+    toggleFavorite: handleToggleFavorite,
     updateBookmark,
-    deleteBookmark,
+    deleteBookmark: handleDeleteBookmark,
   }
 }

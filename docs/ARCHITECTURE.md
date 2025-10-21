@@ -42,7 +42,7 @@ src/
 
 **Data Access Layer**: Repository pattern
 - `BookmarkRepository`: Abstracts database operations
-- Extends `BaseRepository` for common CRUD operations
+- Implements `BaseRepository` interface for common CRUD operations
 
 **API Layer**: Route handlers + Server Actions
 - REST API routes (`/api/links/*`)

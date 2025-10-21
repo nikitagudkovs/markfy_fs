@@ -1,64 +1,33 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useTransition } from 'react'
+import { createBookmark } from '@/features/bookmarks/actions/bookmark-actions'
 
 export function AddBookmarkForm() {
-  const [formData, setFormData] = useState({
-    title: '',
-    url: '',
-    description: '',
-    isFavorite: false,
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleSubmit = async (formData: FormData) => {
     setError('')
-
-    try {
-      const response = await fetch('/api/links', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create bookmark')
+    
+    startTransition(async () => {
+      const result = await createBookmark(formData)
+      
+      if (!result.success) {
+        setError(result.error || 'Failed to create bookmark')
+        return
       }
 
-      // Reset form
-      setFormData({
-        title: '',
-        url: '',
-        description: '',
-        isFavorite: false,
-      })
-
-      // Refresh the page to show the new bookmark
-      window.location.reload()
-    } catch (error) {
-      console.error('Error creating bookmark:', error)
-      setError(error instanceof Error ? error.message : 'Failed to create bookmark')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }))
+      // Reset form by clearing the form
+      const form = document.getElementById('add-bookmark-form') as HTMLFormElement
+      if (form) {
+        form.reset()
+      }
+    })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form id="add-bookmark-form" action={handleSubmit} className="space-y-5">
       {error && (
         <div className="p-4 rounded-xl" style={{ backgroundColor: '#fef2f2', border: '2px solid #fecaca' }}>
           <div className="flex items-start gap-3">
@@ -79,8 +48,6 @@ export function AddBookmarkForm() {
           name="title"
           type="text"
           required
-          value={formData.title}
-          onChange={handleChange}
           className="input"
           placeholder="Enter bookmark title"
         />
@@ -95,8 +62,6 @@ export function AddBookmarkForm() {
           name="url"
           type="url"
           required
-          value={formData.url}
-          onChange={handleChange}
           className="input"
           placeholder="https://example.com"
         />
@@ -109,8 +74,6 @@ export function AddBookmarkForm() {
         <textarea
           id="description"
           name="description"
-          value={formData.description}
-          onChange={handleChange}
           className="input"
           placeholder="Optional description"
         />
@@ -121,8 +84,6 @@ export function AddBookmarkForm() {
           id="isFavorite"
           name="isFavorite"
           type="checkbox"
-          checked={formData.isFavorite}
-          onChange={handleChange}
           className="w-5 h-5 rounded cursor-pointer"
           style={{ accentColor: 'var(--primary)' }}
         />
@@ -136,11 +97,11 @@ export function AddBookmarkForm() {
 
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isPending}
         className="btn btn-primary w-full"
         style={{ height: '3.25rem', fontSize: '1rem' }}
       >
-        {isSubmitting ? (
+        {isPending ? (
           <>
             <svg className="icon-md animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

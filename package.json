@@ -10,6 +10,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
+    "test:e2e:setup": "./scripts/setup-test-db.sh",
+    "test:e2e:full": "npm run test:e2e:setup && npm run test:e2e",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

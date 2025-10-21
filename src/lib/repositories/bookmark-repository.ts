@@ -3,10 +3,8 @@ import { BaseRepository } from './base-repository'
 import { BookmarkQueryBuilder } from '../query-builder/bookmark-query-builder'
 import { LinkQuery } from '@/features/bookmarks/schemas/bookmark-schemas'
 
-export class BookmarkRepository extends BaseRepository<Link, Prisma.LinkCreateInput, Prisma.LinkUpdateInput> {
-  constructor(prisma: PrismaClient) {
-    super(prisma)
-  }
+export class BookmarkRepository implements BaseRepository<Link> {
+  constructor(private prisma: PrismaClient) {}
 
   async findMany(args?: Prisma.LinkFindManyArgs): Promise<Link[]> {
     return this.prisma.link.findMany(args)

@@ -1,6 +1,4 @@
-import { prisma } from '@/lib/db'
-import { BookmarkRepository } from '@/lib/repositories/bookmark-repository'
-import { BookmarkService } from '@/lib/services/bookmark-service'
+import { getBookmarkService } from '@/lib/services/service-container'
 import { LinkQuerySchema } from '@/features/bookmarks/schemas/bookmark-schemas'
 import { BookmarkItem } from './bookmark-item'
 import { Pagination } from './pagination'
@@ -13,8 +11,7 @@ interface BookmarkListProps {
 }
 
 export async function BookmarkList({ page, limit, search, sort }: BookmarkListProps) {
-  const repository = new BookmarkRepository(prisma)
-  const service = new BookmarkService(repository)
+  const service = getBookmarkService()
 
   try {
     const query = LinkQuerySchema.parse({

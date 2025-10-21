@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, useTransition } from 'react'
 import { X, Star, Loader2 } from 'lucide-react'
 import { LinkResponse } from '@/features/bookmarks/schemas/bookmark-schemas'
+import { createBookmark, updateBookmark } from '@/features/bookmarks/actions/bookmark-actions'
 
 interface BookmarkModalProps {
   mode: 'add' | 'edit'
@@ -12,14 +12,7 @@ interface BookmarkModalProps {
 }
 
 export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
-  const router = useRouter()
-  const [formData, setFormData] = useState({
-    title: bookmark?.title || '',
-    url: bookmark?.url || '',
-    description: bookmark?.description || '',
-    isFavorite: bookmark?.isFavorite || false,
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
 
   // 🔧 OPTIMIZATION: useCallback prevents function recreation on every render
@@ -34,46 +27,21 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [handleEscape])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleSubmit = async (formData: FormData) => {
     setError('')
-
-    try {
-      const url = mode === 'add' ? '/api/links' : `/api/links/${bookmark?.id}`
-      const method = mode === 'add' ? 'POST' : 'PATCH'
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `Failed to ${mode} bookmark`)
+    
+    startTransition(async () => {
+      const result = mode === 'add' 
+        ? await createBookmark(formData)
+        : await updateBookmark(formData)
+      
+      if (!result.success) {
+        setError(result.error || `Failed to ${mode} bookmark`)
+        return
       }
 
       onClose()
-      // 🚀 OPTIMIZATION: Use router.refresh() instead of window.location.reload()
-      // This is MUCH faster - only revalidates server data, doesn't reload entire page
-      router.refresh()
-    } catch (error) {
-      console.error(`Error ${mode === 'add' ? 'creating' : 'updating'} bookmark:`, error)
-      setError(error instanceof Error ? error.message : `Failed to ${mode} bookmark`)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }))
+    })
   }
 
   return (
@@ -98,7 +66,7 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form action={handleSubmit} className="space-y-4">
           {error && (
             <div style={{ 
               padding: '0.75rem', 
@@ -112,6 +80,11 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
             </div>
           )}
 
+          {/* Hidden field for bookmark ID in edit mode */}
+          {mode === 'edit' && bookmark && (
+            <input type="hidden" name="id" value={bookmark.id} />
+          )}
+
           <div className="form-group">
             <label htmlFor="title" className="label">
               Title
@@ -121,8 +94,7 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
               name="title"
               type="text"
               required
-              value={formData.title}
-              onChange={handleChange}
+              defaultValue={bookmark?.title || ''}
               className="input"
               placeholder="e.g., React Documentation"
               autoFocus
@@ -138,8 +110,7 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
               name="url"
               type="url"
               required
-              value={formData.url}
-              onChange={handleChange}
+              defaultValue={bookmark?.url || ''}
               className="input"
               placeholder="https://..."
             />
@@ -152,8 +123,7 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
             <textarea
               id="description"
               name="description"
-              value={formData.description}
-              onChange={handleChange}
+              defaultValue={bookmark?.description || ''}
               className="input"
               placeholder="Brief description..."
               rows={3}
@@ -165,8 +135,7 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
               id="isFavorite"
               name="isFavorite"
               type="checkbox"
-              checked={formData.isFavorite}
-              onChange={handleChange}
+              defaultChecked={bookmark?.isFavorite || false}
             />
             <label htmlFor="isFavorite" className="flex items-center gap-2 cursor-pointer flex-1">
               <span className="text-sm font-medium">Mark as favorite</span>
@@ -184,10 +153,10 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="btn btn-primary flex-1"
             >
-              {isSubmitting ? (
+              {isPending ? (
                 <>
                   <Loader2 className="icon-sm animate-spin" />
                   <span>{mode === 'add' ? 'Adding...' : 'Updating...'}</span>

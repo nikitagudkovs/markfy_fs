@@ -26,7 +26,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'DATABASE_URL="file:./prisma/dev.db" npm run dev',
+    command: './scripts/start-test-server.sh',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },

@@ -149,8 +149,6 @@ function BookmarkItemComponent({ bookmark: initialBookmark }: BookmarkItemProps)
   )
 }
 
-// 🔧 OPTIMIZATION: React.memo prevents unnecessary re-renders
-// Only re-renders when bookmark.id, title, or isFavorite changes
 export const BookmarkItem = memo(BookmarkItemComponent, (prevProps, nextProps) => {
   return (
     prevProps.bookmark.id === nextProps.bookmark.id &&
