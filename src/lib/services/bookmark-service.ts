@@ -65,19 +65,4 @@ export class BookmarkService {
     const link = await this.repository.toggleFavorite(id)
     return mapLink(link)
   }
-
-  async getFavoriteLinks(query: Omit<LinkQuery, 'sort'>): Promise<PaginatedLinksResponse> {
-    const favoriteQuery = { ...query, sort: 'newest' as const }
-    const { links, total } = await this.repository.findByQuery(favoriteQuery)
-    
-    const favoriteLinks = links.filter(link => link.isFavorite)
-    
-    const pagination = {
-      page: query.page,
-      limit: query.limit,
-      total: favoriteLinks.length,
-    }
-
-    return mapLinkList(favoriteLinks, pagination)
-  }
 }

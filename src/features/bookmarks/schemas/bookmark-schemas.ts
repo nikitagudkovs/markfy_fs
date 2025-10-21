@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-// Base link schema
 export const LinkSchema = z.object({
   id: z.string().cuid(),
   title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
@@ -11,7 +10,6 @@ export const LinkSchema = z.object({
   updatedAt: z.date(),
 })
 
-// Create link schema (without id, timestamps)
 export const CreateLinkSchema = z.object({
   title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters'),
   url: z.string().url('Must be a valid URL'),
@@ -19,7 +17,6 @@ export const CreateLinkSchema = z.object({
   isFavorite: z.boolean().default(false),
 })
 
-// Update link schema (all fields optional except id)
 export const UpdateLinkSchema = z.object({
   id: z.string().cuid(),
   title: z.string().min(1, 'Title is required').max(255, 'Title must be less than 255 characters').optional(),
@@ -28,7 +25,6 @@ export const UpdateLinkSchema = z.object({
   isFavorite: z.boolean().optional(),
 })
 
-// Query parameters schema
 export const LinkQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
@@ -36,7 +32,6 @@ export const LinkQuerySchema = z.object({
   sort: z.enum(['newest', 'oldest', 'title', 'favorites']).default('newest'),
 })
 
-// Response schemas
 export const LinkResponseSchema = LinkSchema.omit({
   createdAt: true,
   updatedAt: true,
@@ -57,7 +52,6 @@ export const PaginatedLinksResponseSchema = z.object({
   }),
 })
 
-// Type exports
 export type Link = z.infer<typeof LinkSchema>
 export type CreateLink = z.infer<typeof CreateLinkSchema>
 export type UpdateLink = z.infer<typeof UpdateLinkSchema>

@@ -12,16 +12,18 @@ type OptimisticAction =
  * 
  * HOW IT WORKS:
  * 1. User performs action (e.g., clicks favorite)
- * 2. UI updates IMMEDIATELY using optimistic state
- * 3. Server Action happens in background
- * 4. If successful: optimistic state becomes real state
- * 5. If failed: state reverts + shows error
+ * 2. Both optimistic update and server request wrapped in startTransition
+ * 3. UI updates IMMEDIATELY using optimistic state
+ * 4. Server Action happens in background
+ * 5. If successful: optimistic state becomes real state
+ * 6. If failed: state reverts + shows error
  * 
  * BENEFITS:
  * - Instant UI feedback (no loading spinners needed)
  * - Better UX than window.location.reload()
  * - Handles errors gracefully
  * - Uses modern Server Actions instead of API routes
+ * - Complies with React's transition requirements
  */
 export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
   const [isPending, startTransition] = useTransition()
@@ -51,11 +53,11 @@ export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
    * Toggle favorite with optimistic update using Server Action
    */
   const handleToggleFavorite = async () => {
-    // Step 1: Update UI immediately (optimistic)
-    setOptimisticBookmark({ type: 'toggle_favorite', id: initialBookmark.id })
-    
-    // Step 2: Make server request in background using Server Action
+    // Wrap both optimistic update and server request in startTransition
     startTransition(async () => {
+      // Step 1: Update UI immediately (optimistic)
+      setOptimisticBookmark({ type: 'toggle_favorite', id: initialBookmark.id })
+      
       try {
         const formData = new FormData()
         formData.append('id', initialBookmark.id)
@@ -70,7 +72,8 @@ export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
       } catch (error) {
         console.error('Error toggling favorite:', error)
         // On error, React automatically reverts the optimistic update
-        alert('Failed to toggle favorite. Please try again.')
+        // TODO: Replace with toast notification when toast system is implemented
+        console.error('Failed to toggle favorite:', error)
       }
     })
   }
@@ -79,11 +82,11 @@ export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
    * Update bookmark with optimistic update
    */
   const updateBookmark = async (data: Partial<LinkResponse>) => {
-    // Step 1: Update UI immediately
-    setOptimisticBookmark({ type: 'update', id: initialBookmark.id, data })
-    
-    // Step 2: Make server request
+    // Wrap both optimistic update and server request in startTransition
     startTransition(async () => {
+      // Step 1: Update UI immediately
+      setOptimisticBookmark({ type: 'update', id: initialBookmark.id, data })
+      
       try {
         const formData = new FormData()
         formData.append('id', initialBookmark.id)
@@ -101,7 +104,6 @@ export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
         // Server Action automatically handles revalidation
       } catch (error) {
         console.error('Error updating bookmark:', error)
-        alert('Failed to update bookmark. Please try again.')
       }
     })
   }
@@ -128,7 +130,7 @@ export function useBookmarkOptimistic(initialBookmark: LinkResponse) {
         // Server Action automatically handles revalidation
       } catch (error) {
         console.error('Error deleting bookmark:', error)
-        alert('Failed to delete bookmark. Please try again.')
+        // TODO: Replace with toast notification when toast system is implemented
       }
     })
   }

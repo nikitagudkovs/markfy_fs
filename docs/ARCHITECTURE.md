@@ -92,21 +92,60 @@ model Link {
 
 ## API Design
 
-### REST Endpoints
+### Dual API Approach
+
+This application implements both REST API routes and Server Actions, serving different purposes:
+
+#### REST API Endpoints
 ```
 GET    /api/links              # List bookmarks with pagination/search
 POST   /api/links              # Create bookmark
+GET    /api/links/[id]         # Get single bookmark
+PATCH  /api/links/[id]         # Update bookmark
+DELETE /api/links/[id]         # Delete bookmark
 PATCH  /api/links/[id]/favorite # Toggle favorite status
 ```
 
-### Server Actions
+**Purpose:**
+- External HTTP access for testing tools (Postman, curl)
+- Third-party integrations and webhooks
+- Mobile apps or external clients
+- Standard REST API consumers
+
+**Implementation:** Next.js Route Handlers in `src/app/api/links/`
+
+#### Server Actions
 ```typescript
 // Used for form submissions and mutations
 export async function createBookmark(formData: FormData)
-export async function updateBookmark(id: string, formData: FormData)
-export async function deleteBookmark(id: string)
-export async function toggleFavorite(id: string)
+export async function updateBookmark(formData: FormData)
+export async function deleteBookmark(formData: FormData)
+export async function toggleFavorite(formData: FormData)
 ```
+
+**Purpose:**
+- Next.js UI component interactions
+- Automatic revalidation with `revalidatePath()`
+- Type-safe server-side functions
+- Optimistic updates for better UX
+
+**Implementation:** Server Actions in `src/features/bookmarks/actions/`
+
+#### Shared Service Layer
+
+Both APIs call the same `BookmarkService`, ensuring consistent business logic:
+
+```
+REST API Routes ──┐
+                  ├──> BookmarkService ──> Repository ──> Database
+Server Actions ───┘
+```
+
+This architecture provides:
+- **Flexibility**: Choose the right tool for each use case
+- **Consistency**: Same business logic regardless of entry point
+- **Modern UX**: Server Actions for UI, REST for external access
+- **No Duplication**: Shared service layer prevents code duplication
 
 ## State Management
 

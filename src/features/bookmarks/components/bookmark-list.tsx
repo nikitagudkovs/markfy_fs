@@ -42,7 +42,7 @@ export async function BookmarkList({ page, limit, search, sort }: BookmarkListPr
 
     return (
       <div className="space-y-8 mt-8">
-        <div className="space-y-6">
+        <div className="space-y-6 !mt-6">
           {result.data.map((bookmark) => (
             <BookmarkItem key={bookmark.id} bookmark={bookmark} />
           ))}

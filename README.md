@@ -121,6 +121,15 @@ model Link {
 
 ## 🚀 API Design
 
+### Dual API Approach
+
+This application provides **two ways to interact with bookmarks**:
+
+1. **REST API** (for external clients, testing, integrations)
+2. **Server Actions** (for Next.js UI components, optimized UX)
+
+Both approaches use the same underlying service layer, ensuring consistency.
+
 ### RESTful Endpoints
 
 ```
@@ -131,6 +140,12 @@ PATCH  /api/links/[id]         # Update bookmark
 DELETE /api/links/[id]         # Delete bookmark
 PATCH  /api/links/[id]/favorite # Toggle favorite status
 ```
+
+**Use REST API when:**
+- Testing with Postman, curl, or similar tools
+- Building mobile apps or external integrations
+- Need standard HTTP endpoints
+- Working outside of Next.js ecosystem
 
 ### Query Parameters
 - `page`: Page number (default: 1)
@@ -152,6 +167,22 @@ PATCH  /api/links/[id]/favorite # Toggle favorite status
   }
 }
 ```
+
+### Server Actions
+
+```typescript
+// Used by UI components for form submissions and mutations
+createBookmark(formData: FormData)
+updateBookmark(formData: FormData)
+deleteBookmark(formData: FormData)
+toggleFavorite(formData: FormData)
+```
+
+**Use Server Actions when:**
+- Building Next.js UI components
+- Need automatic revalidation
+- Want type-safe server-side functions
+- Implementing optimistic updates
 
 ## 🎨 Frontend Architecture
 
