@@ -60,6 +60,8 @@ vercel --prod
    - **Root Directory**: `./`
    - **Build Command**: `npm run build` (auto-detected)
    - **Output Directory**: `.next` (auto-detected)
+   
+   **Note**: The build command automatically switches to PostgreSQL schema in production
 
 4. **Add Environment Variables**:
    - `DATABASE_URL` = Your PostgreSQL connection string
@@ -96,11 +98,21 @@ npx prisma db push
 3. Check that favorites work
 4. Test search functionality
 
+## Schema Switching
+
+The application automatically switches between database schemas based on the environment:
+
+- **Development** (`NODE_ENV=development`): Uses `prisma/schema.prisma` (SQLite)
+- **Production** (`NODE_ENV=production`): Uses `prisma/schema.production.prisma` (PostgreSQL)
+
+This happens automatically during the build process via the `db:switch-schema` script.
+
 ## Troubleshooting
 
 ### Build Fails
 - Check that `DATABASE_URL` is set in Vercel environment variables
 - Ensure it's a PostgreSQL connection string (not SQLite)
+- Verify that `NODE_ENV=production` is set (Vercel sets this automatically)
 
 ### Database Connection Issues
 - Verify the connection string format: `postgresql://user:password@host:5432/database`
