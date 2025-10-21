@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run db:generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
@@ -13,12 +13,10 @@
     "test:e2e:setup": "./scripts/setup-test-db.sh",
     "test:e2e:full": "npm run test:e2e:setup && npm run test:e2e",
     "postinstall": "prisma generate",
-    "db:generate": "npm run db:switch-schema && prisma generate",
-    "db:switch-schema": "node scripts/switch-schema.js",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:test-connection": "node scripts/test-db-connection.js"
+    "db:studio": "prisma studio"
   },
   "keywords": [
     "bookmarks",
