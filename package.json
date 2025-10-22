@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npm run db:prepare && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "test:e2e:setup": "./scripts/setup-test-db.sh",
     "test:e2e:full": "npm run test:e2e:setup && npm run test:e2e",
-    "postinstall": "prisma generate",
+    "postinstall": "npm run db:prepare && prisma generate",
+    "db:prepare": "node -e \"if(process.env.NODE_ENV==='production'){require('fs').copyFileSync('prisma/schema.production.prisma','prisma/schema.prisma');console.log('Using PostgreSQL schema for production')}\"",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
