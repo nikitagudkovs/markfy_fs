@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npm run db:prepare && prisma generate && next build",
+    "build:with-seed": "npm run db:prepare && prisma generate && next build && npm run db:seed",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
@@ -17,6 +18,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:prod": "node scripts/seed-production.js",
     "db:studio": "prisma studio"
   },
   "keywords": [
