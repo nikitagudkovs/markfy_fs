@@ -15,7 +15,6 @@ export function BookmarkModal({ mode, bookmark, onClose }: BookmarkModalProps) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
 
-  // 🔧 OPTIMIZATION: useCallback prevents function recreation on every render
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       onClose()

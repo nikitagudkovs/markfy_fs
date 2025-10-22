@@ -19,7 +19,6 @@ export function Pagination({ pagination }: PaginationProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // 🔧 OPTIMIZATION: useCallback prevents function recreation on every render
   const navigateToPage = useCallback((page: number) => {
     const params = new URLSearchParams(searchParams)
     params.set('page', page.toString())

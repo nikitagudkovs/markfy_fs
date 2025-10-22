@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  /* Light Mode - Clean & Minimal */
   --background: #ffffff;
   --foreground: #0a0a0a;
   --card: #ffffff;

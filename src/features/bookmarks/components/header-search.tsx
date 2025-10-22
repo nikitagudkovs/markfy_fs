@@ -21,8 +21,6 @@ export function HeaderSearch({ search: initialSearch, sort: initialSort }: Heade
   const isUpdatingUrl = useRef(false)
   const hasInitialized = useRef(false)
 
-  // 🔧 OPTIMIZATION: Only sync with URL params on initial mount
-  // This prevents the sync from interfering with user input
   useEffect(() => {
     if (!hasInitialized.current) {
       const urlSearch = searchParams.get('search') || ''
@@ -61,7 +59,6 @@ export function HeaderSearch({ search: initialSearch, sort: initialSort }: Heade
     return () => clearTimeout(timer)
   }, [search, sort, searchParams, router])
 
-  // 🔧 OPTIMIZATION: useCallback prevents function recreation
   const handleSortChange = useCallback((newSort: string) => {
     setSort(newSort)
   }, [])

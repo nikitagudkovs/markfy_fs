@@ -82,7 +82,6 @@ export async function POST(request: NextRequest) {
     }
     
     if (error instanceof Error) {
-      // Check for duplicate URL error
       if (error.message.includes('already exists')) {
         return NextResponse.json(
           { error: error.message },
