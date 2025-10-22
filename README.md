@@ -44,17 +44,24 @@ A modern, full-stack bookmarks application built with Next.js. Save, organize, a
    ```
 
 3. **Set up environment variables**
+   
+   Create a `.env` file in the project root:
    ```bash
-   cp env.test.example .env.local
+   echo 'DATABASE_URL="file:./prisma/dev.db"
+   TEST_DATABASE_URL="file:./prisma/test.db"' > .env
    ```
    
-   The default configuration uses SQLite:
+   Or manually create `.env` with:
    ```env
    DATABASE_URL="file:./prisma/dev.db"
+   TEST_DATABASE_URL="file:./prisma/test.db"
    ```
 
 4. **Initialize the database**
    ```bash
+   # Generate Prisma client (usually runs automatically after npm install)
+   npx prisma generate
+   
    # Create database tables
    npm run db:push
    
@@ -186,6 +193,22 @@ npm run test:e2e        # Run end-to-end tests
    NODE_ENV=production
    DATABASE_URL=postgresql://user:password@host:port/database
    ```
+
+## Troubleshooting
+
+### Common Issues
+
+**"PrismaClientKnownRequestError: The table 'main.Link' does not exist"**
+- Run `npx prisma generate` to regenerate the Prisma client
+- Run `npm run db:push` to create the database tables
+
+**"Environment variable not found: DATABASE_URL"**
+- Ensure you have a `.env` file with the correct `DATABASE_URL`
+- Use the command from step 3 in the Quick Start section
+
+**Prisma client out of sync**
+- Run `npx prisma generate` after schema changes
+- This usually happens automatically via `postinstall` script
 
 ## Testing
 
