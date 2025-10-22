@@ -72,7 +72,7 @@ A modern, full-stack bookmarks application built with Next.js. Save, organize, a
 
 ## Sample Data
 
-The application comes with a seed script that populates the database with sample bookmarks across various categories including development tools, design resources, productivity apps, and more. This helps demonstrate the search, sorting, and pagination features.
+The application comes with a seed script that populates the database with sample bookmarks.
 
 Run the seed script:
 ```bash
@@ -187,41 +187,18 @@ npm run test:e2e        # Run end-to-end tests
    DATABASE_URL=postgresql://user:password@host:port/database
    ```
 
-3. **Deployment**:
-   - Deploy to Vercel, Railway, or similar platform
-   - Configure environment variables in platform dashboard
-   - Set up custom domain if needed
-
-### Monitoring & Observability
-
-- **Error Tracking**: Sentry integration for error monitoring and performance tracking
-- **Database Monitoring**: Query performance and connection pool monitoring
-- **Uptime Monitoring**: Service availability tracking
-- **Performance Metrics**: API response times and user interaction analytics
-
 ## Testing
 
 Comprehensive testing suite including:
 
 - **Unit Tests**: Business logic and utility functions
 - **Integration Tests**: API endpoints and database operations
-- **Component Tests**: React component behavior
 - **End-to-End Tests**: Complete user workflows
 
 ```bash
 npm run test            # Unit and integration tests
 npm run test:e2e:full   # End-to-end tests with database setup
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and add tests
-4. Run tests: `npm run test`
-5. Commit changes: `git commit -m 'Add amazing feature'`
-6. Push to branch: `git push origin feature/amazing-feature`
-7. Open a Pull Request
 
 ## License
 
